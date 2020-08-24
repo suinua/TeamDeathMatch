@@ -367,8 +367,8 @@ class TeamDeathMatchScoreboard extends Scoreboard
 ```
 
 ## ゲーム参加時にロビーにいた人に知らせる
-```php:src/Main.php
-```
+
+`src/Main.php`を編集します
 
 ```php:src/Main.php
     public function onJoinGame(PlayerJoinedGameEvent $event) {
@@ -382,6 +382,8 @@ class TeamDeathMatchScoreboard extends Scoreboard
 ```
 
 ## 試合開始時の処理を書く
+
+`src/Main.php`を編集します
 
 ```php:src/Main.php
     public function onStartedGame(StartedGameEvent $event) {
@@ -420,6 +422,8 @@ class TeamDeathMatchScoreboard extends Scoreboard
 
 ## 相手を倒したときにスコアが入るように
 
+`src/Main.php`を編集します
+
 ```php:src/Main.php
     public function onPlayerKilledPlayer(PlayerKilledPlayerEvent $event): void {
         $attacker = $event->getAttacker();
@@ -434,6 +438,8 @@ class TeamDeathMatchScoreboard extends Scoreboard
 ```
 
 ## スコア追加時にスコアボードを更新するように
+
+`src/Main.php`を編集します
 
 ```php:src/Main.php
     public function onAddedScore(AddedScoreEvent $event): void {
@@ -453,6 +459,9 @@ class TeamDeathMatchScoreboard extends Scoreboard
 ```
 
 ## 試合終了後に参加者をロビーに送る
+
+`src/Main.php`を編集します
+
 ```php:src/Main.php
     public function onFinishedGame(FinishedGameEvent $event): void {
         $playersData = $event->getPlayersData();
@@ -469,6 +478,9 @@ class TeamDeathMatchScoreboard extends Scoreboard
 ```
 
 ## リスポーン時にアイテムをセットする
+
+`src/Main.php`を編集します
+
 ```php:src/Main.php
     public function onRespawn(PlayerRespawnEvent $event) {
         $player = $event->getPlayer();
@@ -488,6 +500,9 @@ class TeamDeathMatchScoreboard extends Scoreboard
 ```
 
 ## 死亡時のアイテムドロップを消す
+
+`src/Main.php`を編集します
+
 ```php:src/Main.php
     public function onPlayerDeath(PlayerDeathEvent $event) {
         $player = $event->getPlayer();
