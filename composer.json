@@ -15,10 +15,6 @@
   "repositories": [
     {
       "type": "git",
-      "url": "https://github.com/pmmp/PocketMine-MP"
-    },
-    {
-      "type": "git",
       "name": "suinua/form_builder",
       "url": "https://github.com/MineDeepRock/form_builder"
     },
