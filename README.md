@@ -111,7 +111,7 @@ Composerで補完したい人だけ見てください
 # コードを書く
 ## Mainクラスの作成
 
-```php:src/Main.php
+```php:src\tdm\Main.php
 <?php
 
 namespace tdm;
@@ -121,7 +121,9 @@ use pocketmine\plugin\PluginBase;
 
 class Main extends PluginBase implements Listener
 {
-
+    public function onEnable() {
+        $this->getServer()->getPluginManager()->registerEvents($this, $this);
+    }
 }
 ```
 
@@ -130,7 +132,7 @@ class Main extends PluginBase implements Listener
 
 下準備として`src/GameTypeList.php`を作成します
 
-```php:src/GameTypeList.php
+```php:src\tdm\GameTypeList.php
 <?php
 
 
@@ -147,9 +149,9 @@ class GameTypeList
 }
 ```
 
-`src/CreateTeamDeathMatchForm`を作成します
+`src\tdm\CreateTeamDeathMatchForm`を作成します
 
-```php:src/CreateTeamDeathMatchForm.php
+```php:src\tdm\CreateTeamDeathMatchForm.php
 <?php
 
 
@@ -160,6 +162,8 @@ use form_builder\models\custom_form_elements\Input;
 use form_builder\models\custom_form_elements\Label;
 use form_builder\models\CustomForm;
 use pocketmine\Player;
+use pocketmine\scheduler\ClosureTask;
+use pocketmine\scheduler\TaskScheduler;
 use pocketmine\utils\TextFormat;
 use team_game_system\model\Game;
 use team_game_system\model\Score;
@@ -169,11 +173,15 @@ use team_game_system\TeamGameSystem;
 class CreateTeamDeathMatchForm extends CustomForm
 {
 
+    private $scheduler;
+
     private $timeLimit;
     private $maxPlayersCount;
     private $maxScore;
 
-    public function __construct() {
+    public function __construct(TaskScheduler $scheduler) {
+        $this->scheduler = $scheduler;
+
         $this->maxScore = new Input("勝利判定スコア", "", "20");
         $this->maxPlayersCount = new Input("人数制限", "", "");
         $this->timeLimit = new Input("制限時間(秒)", "", "300");
@@ -203,28 +211,22 @@ class CreateTeamDeathMatchForm extends CustomForm
         ];
 
         //マップを選択(あとからMinecraft内でマップを登録します)
-        $map = TeamGameSystem::selectMap("mapname", $teams);
+        $map = TeamGameSystem::selectMap("city", $teams);
         //ゲームを作成
         $game = Game::asNew(GameTypeList::TeamDeathMatch(), $map, $teams, $maxScore, $maxPlayersCount, $timeLimit);
         //ゲームを登録
         TeamGameSystem::registerGame($game);
+
+        
+        //試合がひらかれてから20秒後にスタートされるように
+        $gameId = $game->getId();
+        $this->scheduler->scheduleDelayedTask(new ClosureTask(function (int $tick) use ($gameId): void {
+            TeamGameSystem::startGame($this->scheduler, $gameId);
+        }), 20 * 20);
     }
 
     function onClickCloseButton(Player $player): void { }
 }
-```
-
-`/create`コマンド時に表示されるようにします。
-
-```php:src/Main.php
-//src/Main.php 15行目
-        if ($sender instanceof Player) {
-            switch ($label) {
-                case "create":
-                    $sender->sendForm(new CreateTeamDeathMatchForm());
-                    return true;
-            }
-        }
 ```
 
 ## Formからゲームに参加する
@@ -278,15 +280,6 @@ class TeamDeathMatchListForm extends SimpleForm
 }
 ```
 
-
-```php:src/Main.php
-//src/Main.php 18行目
-                case "join":
-                    $sender->sendForm(new TeamDeathMatchListForm());
-                    return true;
-```
-
-
 ## コマンドからフォームを呼び出す
 
 `plugin.yml`に以下を付け足します
@@ -320,7 +313,7 @@ class Main extends PluginBase implements Listener
         if ($sender instanceof Player) {
             switch ($label) {
                 case "create":
-                    $sender->sendForm(new CreateTeamDeathMatchForm());
+                    $sender->sendForm(new CreateTeamDeathMatchForm($this->getScheduler()));
                     return true;
                 case "join":
                     $sender->sendForm(new TeamDeathMatchListForm());
@@ -335,9 +328,9 @@ class Main extends PluginBase implements Listener
 
 ## スコアボードの作成
 
-`src/TeamDeathMatchScoreboard.php`を作成します
+`src\tdm\TeamDeathMatchScoreboard.php`を作成します
 
-```php:src/TeamDeathMatchScoreboard.php
+```php:src\tdm\TeamDeathMatchScoreboard.php
 <?php
 
 
@@ -360,7 +353,7 @@ class TeamDeathMatchScoreboard extends Scoreboard
             new Score($slot, "Map:" . $game->getMap()->getName(), 1, 1),
         ];
 
-        $index = count($scores) - 1;
+        $index = count($scores);
         foreach ($game->getTeams() as $team) {
             $scores[] = new Score($slot, $team->getTeamColorFormat() . $team->getName() . ":" . $team->getScore()->getValue(), $index, $index);
             $index++;
@@ -383,9 +376,9 @@ class TeamDeathMatchScoreboard extends Scoreboard
 
 ## ボスバーの下準備
 
-`src/BossBarTypeList.php`を作成します
+`src\tdm\BossBarTypeList.php`を作成します
 
-```php:src/BossBarTypeList.php
+```php:src\tdm\BossBarTypeList.php
 <?php
 
 
@@ -404,9 +397,9 @@ class BossBarTypeList
 
 ## ゲーム参加時にロビーにいた人に知らせる
 
-`src/Main.php`を編集します
+`src\tdm\Main.php`を編集します
 
-```php:src/Main.php
+```php:src\tdm\Main.php
     public function onJoinGame(PlayerJoinedGameEvent $event) {
         $player = $event->getPlayer();
 
@@ -461,9 +454,9 @@ class BossBarTypeList
 
 ## 相手を倒したときにスコアが入るように
 
-`src/Main.php`を編集します
+`src\tdm\Main.php`を編集します
 
-```php:src/Main.php
+```php:src\tdm\Main.php
     public function onPlayerKilledPlayer(PlayerKilledPlayerEvent $event): void {
         $attacker = $event->getAttacker();
         $attackerData = TeamGameSystem::getPlayerData($attacker);
@@ -478,9 +471,9 @@ class BossBarTypeList
 
 ## スコア追加時にスコアボードを更新するように
 
-`src/Main.php`を編集します
+`src\tdm\Main.php`を編集します
 
-```php:src/Main.php
+```php:src\tdm\Main.php
     public function onAddedScore(AddedScoreEvent $event): void {
         $gameId = $event->getGameId();
         $game = TeamGameSystem::getGame($gameId);
@@ -499,9 +492,9 @@ class BossBarTypeList
 
 ## リスポーン時にアイテムをセットする
 
-`src/Main.php`を編集します
+`src\tdm\Main.php`を編集します
 
-```php:src/Main.php
+```php:src\tdm\Main.php
     public function onRespawn(PlayerRespawnEvent $event) {
         $player = $event->getPlayer();
         $playerData = TeamGameSystem::getPlayerData($player);
@@ -521,9 +514,9 @@ class BossBarTypeList
 
 ## 死亡時のアイテムドロップを消す
 
-`src/Main.php`を編集します
+`src\tdm\Main.php`を編集します
 
-```php:src/Main.php
+```php:src\tdm\Main.php
     public function onPlayerDeath(PlayerDeathEvent $event) {
         $player = $event->getPlayer();
         $playerData = TeamGameSystem::getPlayerData($player);
@@ -539,7 +532,10 @@ class BossBarTypeList
 ```
 
 ## 試合時間経過時にボスバーを更新する
-```php:src/Main.php
+
+`src\tdm\Main.php`を編集します
+
+```php:src\tdm\Main.php
     public function onUpdatedGameTimer(UpdatedGameTimerEvent $event): void {
         $gameId = $event->getGameId();
         $game = TeamGameSystem::getGame($gameId);
@@ -569,9 +565,9 @@ class BossBarTypeList
 
 ## 試合終了後に参加者をロビーに送る
 
-`src/Main.php`を編集します
+`src\tdm\Main.php`を編集します
 
-```php:src/Main.php
+```php:src\tdm\Main.php
     public function onFinishedGame(FinishedGameEvent $event): void {
         $game = $event->getGame();
         if (!$game->getType()->equals(GameTypeList::TeamDeathMatch())) return;
@@ -620,9 +616,9 @@ class BossBarTypeList
 6,0を選択しいくつかスポーン地点を登録 1も同様に行う  
 7,終わり  
 
-`src\CreateTeamDeathMatchForm.php`の54行目の`mapname`を登録したマップ名に変更
+`src\tdm\CreateTeamDeathMatchForm.php`の54行目の`mapname`を登録したマップ名に変更
 
-```php:src\CreateTeamDeathMatchForm.php
+```php:src\tdm\CreateTeamDeathMatchForm.php
 $map = TeamGameSystem::selectMap("city", $teams);
 ```
 
