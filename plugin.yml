@@ -1,0 +1,17 @@
+name: TeamDeathMatch
+main: TeamDeathMatch\Main
+version: 1.0.0
+api: 3.0.0
+
+depend:
+  - TeamGameSystem
+  - FormBuilder
+  - SlotMenuSystem
+
+commands:
+  create:
+    usage: "/create"
+    description: ""
+  join:
+    usage: "/join"
+    description: ""

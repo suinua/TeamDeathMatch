@@ -1,0 +1,48 @@
+{
+  "name": "suinua/TeamDeathMatch",
+  "authors": [
+    {
+      "name": "suinua"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "": [
+        "src/"
+      ]
+    }
+  },
+  "repositories": [
+    {
+      "type": "git",
+      "url": "https://github.com/pmmp/PocketMine-MP"
+    },
+    {
+      "type": "git",
+      "name": "suinua/form_builder",
+      "url": "https://github.com/MineDeepRock/form_builder"
+    },
+    {
+      "type": "git",
+      "name": "suinua/slot_menu_system",
+      "url": "https://github.com/MineDeepRock/slot_menu_system"
+    },
+    {
+      "type": "git",
+      "name": "suinua/scoreboard_system",
+      "url": "https://github.com/MineDeepRock/scoreboard_system"
+    },
+    {
+      "type": "git",
+      "name": "suinua/team_game_system",
+      "url": "https://github.com/MineDeepRock/team_game_system"
+    }
+  ],
+  "require": {
+    "pocketmine/pocketmine-mp": "3.14.2",
+    "suinua/form_builder": "dev-master",
+    "suinua/slot_menu_system": "dev-master",
+    "suinua/team_game_system": "dev-master",
+    "suinua/scoreboard_system": "dev-master"
+  }
+}
