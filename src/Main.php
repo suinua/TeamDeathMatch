@@ -2,6 +2,8 @@
 
 namespace TeamDeathMatch;
 
+use bossbar_system\BossBar;
+use bossbar_system\model\BossBarType;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\event\Listener;
@@ -19,6 +21,7 @@ use team_game_system\pmmp\event\FinishedGameEvent;
 use team_game_system\pmmp\event\PlayerJoinedGameEvent;
 use team_game_system\pmmp\event\PlayerKilledPlayerEvent;
 use team_game_system\pmmp\event\StartedGameEvent;
+use team_game_system\pmmp\event\UpdatedGameTimerEvent;
 use team_game_system\TeamGameSystem;
 
 class Main extends PluginBase implements Listener
@@ -71,6 +74,9 @@ class Main extends PluginBase implements Listener
 
             //Scoreboardのセット
             TeamDeathMatchScoreBoard::send($player, $game);
+            //ボスバーをセット
+            $bossBar = new BossBar($player, BossBarTypeList::TeamDeathMatch(), "TeamDeathMatch", 0);
+            $bossBar->send();
 
             //アイテムをセット
             $player->getInventory()->setContents([
@@ -103,6 +109,31 @@ class Main extends PluginBase implements Listener
         foreach ($playersData as $playerData) {
             $player = $this->getServer()->getPlayer($playerData->getName());
             TeamDeathMatchScoreBoard::update($player, $game);
+        }
+    }
+
+    public function onUpdatedGameTimer(UpdatedGameTimerEvent $event): void {
+        $gameId = $event->getGameId();
+        $game = TeamGameSystem::getGame($gameId);
+        //チームデスマッチ以外のゲームに関するものだったら処理を行わない
+        if (!$game->getType()->equals(GameTypeList::TeamDeathMatch())) return;
+
+        $playersData = TeamGameSystem::getGamePlayersData($gameId);
+        $timeLimit = $event->getTimeLimit();
+        $elapsedTime = $event->getElapsedTime();
+
+        foreach ($playersData as $playerData) {
+            $player = Server::getInstance()->getPlayer($playerData->getName());
+            $bossBar = BossBar::findByType($player, BossBarTypeList::TeamDeathMatch());
+
+            //制限時間がなかったら
+            if ($timeLimit === null) {
+                $bossBar->updateTitle("経過時間:" . $elapsedTime);
+                continue;
+            }
+
+            $bossBar->updatePercentage($elapsedTime / $timeLimit);
+            $bossBar->updateTitle($elapsedTime . "/" . $timeLimit);
         }
     }
 
