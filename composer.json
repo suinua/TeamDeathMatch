@@ -34,6 +34,11 @@
     },
     {
       "type": "git",
+      "name": "suinua/bossbar_system",
+      "url": "https://github.com/MineDeepRock/bossbar_system"
+    },
+    {
+      "type": "git",
       "name": "suinua/team_game_system",
       "url": "https://github.com/MineDeepRock/team_game_system"
     }
@@ -43,6 +48,7 @@
     "suinua/form_builder": "dev-master",
     "suinua/slot_menu_system": "dev-master",
     "suinua/team_game_system": "dev-master",
-    "suinua/scoreboard_system": "dev-master"
+    "suinua/scoreboard_system": "dev-master",
+    "suinua/bossbar_system": "dev-master"
   }
 }
