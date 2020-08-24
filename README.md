@@ -130,7 +130,7 @@ class Main extends PluginBase implements Listener
 
 下準備として`src/GameTypeList.php`を作成します
 
-```php:src/GameTypeList
+```php:src/GameTypeList.php
 <?php
 
 
