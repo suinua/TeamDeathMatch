@@ -7,10 +7,14 @@ PHPStormのフォーマットを利用します。
 # 環境
 
 # ライブラリのインストール
-使用するライブラリはこれ[team_game_system](https://github.com/MineDeepRock/team_game_system)
-依存関係で [form_builder](https://github.com/MineDeepRock/form_builder) と [slot_menu_system](https://github.com/MineDeepRock/slot_menu_system) も導入します。
+使用するライブラリは[team_game_system](https://github.com/MineDeepRock/team_game_system)  
+
+team_game_systemの依存関係で  
+[form_builder](https://github.com/MineDeepRock/form_builder)
+[slot_menu_system](https://github.com/MineDeepRock/slot_menu_system) も導入します。
 
 スコアボードのAPIで [scoreboard_system](https://github.com/MineDeepRock/scoreboard_system) を使用します
+ボスバーのAPIで [bossbar_system](https://github.com/MineDeepRock/bossbar_system) を使用します
 
 コマンドプロンプトでpluginsフォルダに移動して
 
@@ -19,6 +23,7 @@ git clone https://github.com/MineDeepRock/team_game_system
 git clone https://github.com/MineDeepRock/form_builder
 git clone https://github.com/MineDeepRock/slot_menu_system
 git clone https://github.com/MineDeepRock/scoreboard_system
+git clone https://github.com/MineDeepRock/bossbar_system
 ```
 
 これでOK
@@ -79,6 +84,11 @@ Composerで補完したい人だけ見てください
     },
     {
       "type": "git",
+      "name": "suinua/bossbar_system",
+      "url": "https://github.com/MineDeepRock/bossbar_system"
+    },
+    {
+      "type": "git",
       "name": "suinua/team_game_system",
       "url": "https://github.com/MineDeepRock/team_game_system"
     }
@@ -88,7 +98,8 @@ Composerで補完したい人だけ見てください
     "suinua/form_builder": "dev-master",
     "suinua/slot_menu_system": "dev-master",
     "suinua/team_game_system": "dev-master",
-    "suinua/scoreboard_system": "dev-master"
+    "suinua/scoreboard_system": "dev-master",
+    "suinua/bossbar_system": "dev-master"
   }
 }
 ```
@@ -366,6 +377,27 @@ class TeamDeathMatchScoreboard extends Scoreboard
 }
 ```
 
+## ボスバーの下準備
+
+`src/BossBarTypeList.php`を作成します
+
+```php:src/BossBarTypeList.php
+<?php
+
+
+namespace TeamDeathMatch;
+
+
+use bossbar_system\model\BossBarType;
+
+class BossBarTypeList
+{
+    static function TeamDeathMatch(): BossBarType {
+        return new BossBarType("TeamDeathMatch");
+    }
+}
+```
+
 ## ゲーム参加時にロビーにいた人に知らせる
 
 `src/Main.php`を編集します
@@ -410,6 +442,9 @@ class TeamDeathMatchScoreboard extends Scoreboard
 
             //Scoreboardのセット
             TeamDeathMatchScoreBoard::send($player, $game);
+            //ボスバーをセット
+            $bossBar = new BossBar($player, BossBarTypeList::TeamDeathMatch(), "TeamDeathMatch", 0);
+            $bossBar->send();
 
             //アイテムをセット
             $player->getInventory()->setContents([
@@ -515,5 +550,33 @@ class TeamDeathMatchScoreboard extends Scoreboard
         if (!$game->getType()->equals(GameTypeList::TeamDeathMatch())) return;
         
         $event->setDrops([]);
+    }
+```
+
+## 試合時間経過時にボスバーを更新する
+```php:src/Main.php
+    public function onUpdatedGameTimer(UpdatedGameTimerEvent $event): void {
+        $gameId = $event->getGameId();
+        $game = TeamGameSystem::getGame($gameId);
+        //チームデスマッチ以外のゲームに関するものだったら処理を行わない
+        if (!$game->getType()->equals(GameTypeList::TeamDeathMatch())) return;
+
+        $playersData = TeamGameSystem::getGamePlayersData($gameId);
+        $timeLimit = $event->getTimeLimit();
+        $elapsedTime = $event->getElapsedTime();
+
+        foreach ($playersData as $playerData) {
+            $player = Server::getInstance()->getPlayer($playerData->getName());
+            $bossBar = BossBar::findByType($player, BossBarTypeList::TeamDeathMatch());
+
+            //制限時間がなかったら
+            if ($timeLimit === null) {
+                $bossBar->updateTitle("経過時間:" . $elapsedTime);
+                continue;
+            }
+
+            $bossBar->updatePercentage($elapsedTime / $timeLimit);
+            $bossBar->updateTitle($elapsedTime . "/" . $timeLimit);
+        }
     }
 ```
