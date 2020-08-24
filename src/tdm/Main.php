@@ -46,10 +46,42 @@ class Main extends PluginBase implements Listener
 
     public function onJoinGame(PlayerJoinedGameEvent $event) {
         $player = $event->getPlayer();
+        $gameId = $event->getGameId();
+        $game = TeamGameSystem::getGame($event->getGameId());
+
+        //チームデスマッチ以外のゲームに関するものだったら処理を行わない
+        if (!$game->getType()->equals(GameTypeList::TeamDeathMatch())) return;
 
         $level = Server::getInstance()->getLevelByName("lobby");
         foreach ($level->getPlayers() as $lobbyPlayer) {
             $lobbyPlayer->sendMessage($player->getName() . "がチームデスマッチに参加しました");
+        }
+
+        //途中参加
+        if ($game->isStarted()) {
+            $playerData = TeamGameSystem::getPlayerData($player);
+            //スポーン地点をセット
+            TeamGameSystem::setSpawnPoint($player);
+
+            //テレポート
+            $player->teleport($player->getSpawn());
+
+            //通知
+            $player->sendTitle("チームデスマッチ スタート");
+            $team = TeamGameSystem::getTeam($gameId, $playerData->getTeamId());
+            $player->sendMessage("あなたは" . $team->getTeamColorFormat() . $team->getName() . TextFormat::RESET . "です");
+
+            //Scoreboardのセット
+            TeamDeathMatchScoreBoard::send($player, $game);
+            //ボスバーをセット
+            $bossBar = new BossBar($player, BossBarTypeList::TeamDeathMatch(), "TeamDeathMatch", 0);
+            $bossBar->send();
+
+            //アイテムをセット
+            $player->getInventory()->setContents([
+                ItemFactory::get(ItemIds::WOODEN_SWORD, 0, 1),
+                ItemFactory::get(ItemIds::APPLE, 0, 10),
+            ]);
         }
     }
 
