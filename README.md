@@ -607,3 +607,25 @@ class BossBarTypeList
         }
     }
 ```
+
+以上でプラグインは完成です  
+次はマップの設定を行っていきます
+
+# Mapの設定
+1,まず登録したいマップにテレポートします  
+2,`/map`コマンドを打ちます  
+3,追加を選択  
+4,マップ名を入力し送信  
+5,スポーン地点グループを2つ追加(0と1ができる)  
+6,0を選択しいくつかスポーン地点を登録 1も同様に行う  
+7,終わり  
+
+`src\CreateTeamDeathMatchForm.php`の54行目の`mapname`を登録したマップ名に変更
+
+```php:src\CreateTeamDeathMatchForm.php
+$map = TeamGameSystem::selectMap("city", $teams);
+```
+
+以上  
+お疲れさまでした  
+ばいばい
