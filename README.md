@@ -493,25 +493,6 @@ class BossBarTypeList
     }
 ```
 
-## 試合終了後に参加者をロビーに送る
-
-`src/Main.php`を編集します
-
-```php:src/Main.php
-    public function onFinishedGame(FinishedGameEvent $event): void {
-        $playersData = $event->getPlayersData();
-
-        //lobbyに送り返す
-        $server = Server::getInstance();
-        $level = $server->getLevelByName("lobby");
-        foreach ($playersData as $playerData) {
-            $player = $server->getPlayer($playerData->getName());
-            $player->getInventory()->setContents([]);
-            $player->teleport($level->getSpawnLocation());
-        }
-    }
-```
-
 ## リスポーン時にアイテムをセットする
 
 `src/Main.php`を編集します
@@ -577,6 +558,48 @@ class BossBarTypeList
 
             $bossBar->updatePercentage($elapsedTime / $timeLimit);
             $bossBar->updateTitle($elapsedTime . "/" . $timeLimit);
+        }
+    }
+```
+
+
+## 試合終了後に参加者をロビーに送る
+
+`src/Main.php`を編集します
+
+```php:src/Main.php
+    public function onFinishedGame(FinishedGameEvent $event): void {
+        $game = $event->getGame();
+        if (!$game->getType()->equals(GameTypeList::TeamDeathMatch())) return;
+
+        $wonTeam = $event->getWonTeam();
+        if ($wonTeam === null) {
+            $message = "引き分け";
+        } else {
+            $message = $wonTeam->getTeamColorFormat() . $wonTeam->getName() . TextFormat::RESET . "の勝利！";
+        }
+
+
+        $playersData = $event->getPlayersData();
+
+        //lobbyに送り返す
+        $server = Server::getInstance();
+        $level = $server->getLevelByName("lobby");
+        foreach ($playersData as $playerData) {
+            $player = $server->getPlayer($playerData->getName());
+            //スコアボードを消す
+            TeamDeathMatchScoreboard::delete($player);
+            //ボスバーを消す
+            $bossBar = BossBar::findByType($player, BossBarTypeList::TeamDeathMatch());
+            $bossBar->remove();
+
+            $player->getInventory()->setContents([]);
+
+            //テレポート
+            $player->teleport($level->getSpawnLocation());
+
+            //メッセージ送信
+            $player->sendMessage($message);
         }
     }
 ```

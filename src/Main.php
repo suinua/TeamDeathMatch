@@ -138,6 +138,17 @@ class Main extends PluginBase implements Listener
     }
 
     public function onFinishedGame(FinishedGameEvent $event): void {
+        $game = $event->getGame();
+        if (!$game->getType()->equals(GameTypeList::TeamDeathMatch())) return;
+
+        $wonTeam = $event->getWonTeam();
+        if ($wonTeam === null) {
+            $message = "引き分け";
+        } else {
+            $message = $wonTeam->getTeamColorFormat() . $wonTeam->getName() . TextFormat::RESET . "の勝利！";
+        }
+
+
         $playersData = $event->getPlayersData();
 
         //lobbyに送り返す
@@ -145,8 +156,19 @@ class Main extends PluginBase implements Listener
         $level = $server->getLevelByName("lobby");
         foreach ($playersData as $playerData) {
             $player = $server->getPlayer($playerData->getName());
+            //スコアボードを消す
+            TeamDeathMatchScoreboard::delete($player);
+            //ボスバーを消す
+            $bossBar = BossBar::findByType($player, BossBarTypeList::TeamDeathMatch());
+            $bossBar->remove();
+
             $player->getInventory()->setContents([]);
+
+            //テレポート
             $player->teleport($level->getSpawnLocation());
+
+            //メッセージ送信
+            $player->sendMessage($message);
         }
     }
 
