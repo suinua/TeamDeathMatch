@@ -1,7 +1,7 @@
 <?php
 
 
-namespace TeamDeathMatch;
+namespace tdm;
 
 
 use pocketmine\Player;
@@ -20,7 +20,7 @@ class TeamDeathMatchScoreboard extends Scoreboard
             new Score($slot, "Map:" . $game->getMap()->getName(), 1, 1),
         ];
 
-        $index = count($scores) - 1;
+        $index = count($scores);
         foreach ($game->getTeams() as $team) {
             $scores[] = new Score($slot, $team->getTeamColorFormat() . $team->getName() . ":" . $team->getScore()->getValue(), $index, $index);
             $index++;

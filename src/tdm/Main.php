@@ -1,9 +1,8 @@
 <?php
 
-namespace TeamDeathMatch;
+namespace tdm;
 
 use bossbar_system\BossBar;
-use bossbar_system\model\BossBarType;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\event\Listener;
@@ -26,11 +25,15 @@ use team_game_system\TeamGameSystem;
 
 class Main extends PluginBase implements Listener
 {
+    public function onEnable() {
+        $this->getServer()->getPluginManager()->registerEvents($this, $this);
+    }
+
     public function onCommand(CommandSender $sender, Command $command, string $label, array $args): bool {
         if ($sender instanceof Player) {
             switch ($label) {
                 case "create":
-                    $sender->sendForm(new CreateTeamDeathMatchForm());
+                    $sender->sendForm(new CreateTeamDeathMatchForm($this->getScheduler()));
                     return true;
                 case "join":
                     $sender->sendForm(new TeamDeathMatchListForm());

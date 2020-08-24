@@ -1,7 +1,7 @@
 <?php
 
 
-namespace TeamDeathMatch;
+namespace tdm;
 
 
 use bossbar_system\model\BossBarType;

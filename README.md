@@ -114,7 +114,7 @@ Composerで補完したい人だけ見てください
 ```php:src/Main.php
 <?php
 
-namespace TeamDeathMatch;
+namespace tdm;
 
 use pocketmine\event\Listener;
 use pocketmine\plugin\PluginBase;
@@ -134,7 +134,7 @@ class Main extends PluginBase implements Listener
 <?php
 
 
-namespace TeamDeathMatch;
+namespace tdm;
 
 
 use team_game_system\model\GameType;
@@ -153,7 +153,7 @@ class GameTypeList
 <?php
 
 
-namespace TeamDeathMatch;
+namespace tdm;
 
 
 use form_builder\models\custom_form_elements\Input;
@@ -232,7 +232,7 @@ class CreateTeamDeathMatchForm extends CustomForm
 <?php
 
 
-namespace TeamDeathMatch;
+namespace tdm;
 
 
 use form_builder\models\simple_form_elements\SimpleFormButton;
@@ -306,7 +306,7 @@ commands:
 ```php:src/Main.php
 <?php
 
-namespace TeamDeathMatch;
+namespace tdm;
 
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
@@ -341,7 +341,7 @@ class Main extends PluginBase implements Listener
 <?php
 
 
-namespace TeamDeathMatch;
+namespace tdm;
 
 
 use pocketmine\Player;
@@ -389,7 +389,7 @@ class TeamDeathMatchScoreboard extends Scoreboard
 <?php
 
 
-namespace TeamDeathMatch;
+namespace tdm;
 
 
 use bossbar_system\model\BossBarType;

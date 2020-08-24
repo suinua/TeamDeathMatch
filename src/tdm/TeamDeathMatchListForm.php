@@ -1,7 +1,7 @@
 <?php
 
 
-namespace TeamDeathMatch;
+namespace tdm;
 
 
 use form_builder\models\simple_form_elements\SimpleFormButton;

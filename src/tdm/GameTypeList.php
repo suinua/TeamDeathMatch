@@ -1,7 +1,7 @@
 <?php
 
 
-namespace TeamDeathMatch;
+namespace tdm;
 
 
 use team_game_system\model\GameType;
