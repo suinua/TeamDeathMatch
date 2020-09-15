@@ -24,18 +24,21 @@ class CreateTeamDeathMatchForm extends CustomForm
     private $timeLimit;
     private $maxPlayersCount;
     private $maxScore;
+    private $maxPlayersDifference;
 
     public function __construct(TaskScheduler $scheduler) {
         $this->scheduler = $scheduler;
 
         $this->maxScore = new Input("勝利判定スコア", "", "20");
         $this->maxPlayersCount = new Input("人数制限", "", "");
+        $this->maxPlayersDifference = new Input("人数差制限", "", "1");
         $this->timeLimit = new Input("制限時間(秒)", "", "300");
 
         parent::__construct("", [
             new Label("無い場合は空白でお願いします"),
             $this->maxScore,
             $this->maxPlayersCount,
+            $this->maxPlayersDifference,
             $this->timeLimit,
         ]);
     }
@@ -46,6 +49,9 @@ class CreateTeamDeathMatchForm extends CustomForm
 
         $maxPlayersCount = $this->maxPlayersCount->getResult();
         $maxPlayersCount = $maxPlayersCount === "" ? null : intval($maxPlayersCount);
+
+        $maxPlayersDifference = $this->maxPlayersDifference->getResult();
+        $maxPlayersDifference = $maxPlayersDifference === "" ? null : intval($maxPlayersDifference);
 
         $timeLimit = $this->timeLimit->getResult();
         $timeLimit = $timeLimit === "" ? null : intval($timeLimit);
@@ -59,10 +65,16 @@ class CreateTeamDeathMatchForm extends CustomForm
         //マップを選択(あとからMinecraft内でマップを登録します)
         $map = TeamGameSystem::selectMap("city", $teams);
         //ゲームを作成
-        $game = Game::asNew(GameTypeList::TeamDeathMatch(), $map, $teams, $maxScore, $maxPlayersCount, $timeLimit);
+        $game = Game::asNew(GameTypeList::TeamDeathMatch(), $map, $teams);
+        $game->setMaxScore($maxScore);
+        $game->setMaxPlayersCount($maxPlayersCount);
+        $game->setMaxPlayersDifference($maxPlayersDifference);
+        $game->setTimeLimit($timeLimit);
+
         //ゲームを登録
         TeamGameSystem::registerGame($game);
 
+        //試合がひらかれてから20秒後にスタートされるように
         $gameId = $game->getId();
         $this->scheduler->scheduleDelayedTask(new ClosureTask(function (int $tick) use ($gameId): void {
             TeamGameSystem::startGame($this->scheduler, $gameId);
